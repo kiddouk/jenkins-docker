@@ -221,14 +221,14 @@
                 "KeyName" : "aws-eb",
                 "SecurityGroups" : [ {"Ref": "SecurityGroupHTTPExternal"}, {"Ref": "SecurityGroupSSH"} ],
                 "SpotPrice" : {"Ref": "Price"},
-                "UserData" : { "Fn::Base64" : {"Fn::Join": ["\n", [
-                    "#!/bin/sh",
-                    "apt-get update",
-                    "apt-get upgrade -y",
-                    "apt-get install -y git",
-                    "cd /tmp",
-                    "git clone https://github.com/kiddouk/jenkins-docker ",
-                    "sh jenkins-docker/init-jenkins.sh"
+                "UserData" : { "Fn::Base64" : {"Fn::Join": ["", [
+                    "#!/bin/sh\n",
+                    "apt-get update\n",
+                    "apt-get upgrade -y\n",
+                    "apt-get install -y git\n",
+                    "cd /tmp\n",
+                    "git clone https://github.com/kiddouk/jenkins-docker\n",
+                    "sh jenkins-docker/init-jenkins.sh ", {"Ref": "AWS::Region"}, " ", {"Ref": "BlockStorage"}, " ", {"Ref": "BucketCredentials"}, "\n"
                 ]]}}
             }
         }
