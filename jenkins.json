@@ -157,7 +157,7 @@
                 "VpcId" : {"Ref": "VPC"}
             }
         },
-        "ManagedPolicyJenkins": {
+        "ManagedPolicyUpdateJenkinsELB": {
             "Type": "AWS::IAM::ManagedPolicy",
             "Properties": {
                 "Description" : "Allow to modify the AutoScaling group",
@@ -168,6 +168,25 @@
                         "Effect" : "Allow",           
                         "Action" : "elasticloadbalancing:ModifyLoadBalancerAttributes",
                         "Resource" : {"Fn::Join": ["", ["arn:aws:elasticloadbalancing:", {"Ref": "AWS::Region"}, ":*", ":loadbalancer/", {"Ref": "ELB"}]]}
+                    }]
+                }
+            }
+        },
+        "ManagedPolicyAttachJenkinsVolume": {
+            "Type": "AWS::IAM::ManagedPolicy",
+            "DependsOn": ["BlockStorage"],
+
+            "Properties": {
+                "Description" : "Allow to modify the AutoScaling group",
+                "PolicyDocument" :
+                {
+                    "Version":"2012-10-17", 
+                    "Statement" : [{
+                        "Effect" : "Allow",           
+                        "Action" : "ec2:AttachVolume",
+                        "Resource" : [{"Fn::Join": ["", [ "arn:aws:ec2:", {"Ref": "AWS::Region"}, ":*", ":volume/", {"Ref": "BlockStorage"}]]},
+                                      {"Fn::Join": ["", [ "arn:aws:ec2:", {"Ref": "AWS::Region"}, ":*", ":instance/*"]]}]
+                        
                     }]
                 }
             }
@@ -185,7 +204,7 @@
                         "Action": [ "sts:AssumeRole" ]
                     }]
                 },
-                "ManagedPolicyArns": [ {"Ref": "ManagedPolicyJenkins"} ]
+                "ManagedPolicyArns": [ {"Ref": "ManagedPolicyUpdateJenkinsELB"}, {"Ref": "ManagedPolicyAttachJenkinsVolume"} ]
             }
         },
         "InstanceProfileJenkins": {
