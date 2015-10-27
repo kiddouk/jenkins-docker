@@ -6,6 +6,7 @@ AWS_REGION=$1
 BLOCK_STORAGE_ID=$2
 BUCKET=$3
 
+apt-get install python-setuptools
 easy_install pip
 pip install awscli
 aws configure set region $AWS_REGION
