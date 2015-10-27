@@ -24,4 +24,4 @@ fi
 mount /dev/xvdh /mnt/jenkins_data
 aws s3 cp s3://$BUCKET/hub.dockerconfig .dockerconfig
 docker pull kiddouk/jenkins
-docker run -p 8080:8080 -v /mnt/jenkins_data:/var/jenkins_home kiddouk/jenkins
+docker run -p 80:8080 -v /mnt/jenkins_data:/var/jenkins_home kiddouk/jenkins
