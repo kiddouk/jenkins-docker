@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PATH=/bin:/usr/bin:/usr/local/bin
+PATH=/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin
 
 AWS_REGION=$1
 BLOCK_STORAGE_ID=$2
