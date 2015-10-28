@@ -21,6 +21,18 @@
             "Description": "WebServer EC2 instance type",
             "Type": "String",
             "Default": "0.01"
+        },
+        "BucketDockerConfiguration": {
+            "Description": "Bucket that contains the dockerconfig file",
+            "Type": "String"
+        },
+        "KeyPair": {
+            "Description": "Keypair to be used",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "Domain": {
+            "Description": "The domain to hook your jenkins endpoint to",
+            "Type": "String"
         }
     },
     "Resources": {
@@ -157,6 +169,21 @@
                 "VpcId" : {"Ref": "VPC"}
             }
         },
+        "ManagedPolicyAccessBucket": {
+            "Type": "AWS::IAM::ManagedPolicy",
+            "Properties": {
+                "Description" : "Allow to modify the AutoScaling group",
+                "PolicyDocument" :
+                {
+                    "Version":"2012-10-17", 
+                    "Statement" : [{
+                        "Effect" : "Allow",           
+                        "Action" : ["s3:GetObject", "s3:GetObjectVersion"],
+                        "Resource" : {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "BucketDockerConfiguration"}, "/hub.dockercfg"]]}
+                    }]
+                }
+            }
+        },
         "ManagedPolicyUpdateJenkinsELB": {
             "Type": "AWS::IAM::ManagedPolicy",
             "Properties": {
@@ -204,7 +231,10 @@
                         "Action": [ "sts:AssumeRole" ]
                     }]
                 },
-                "ManagedPolicyArns": [ {"Ref": "ManagedPolicyUpdateJenkinsELB"}, {"Ref": "ManagedPolicyAttachJenkinsVolume"} ]
+                "ManagedPolicyArns": [ {"Ref": "ManagedPolicyUpdateJenkinsELB"},
+                                       {"Ref": "ManagedPolicyAttachJenkinsVolume"},
+                                       {"Ref": "ManagedPolicyAccessBucket"}
+                                     ]
             }
         },
         "InstanceProfileJenkins": {
@@ -212,12 +242,6 @@
             "Properties": {
                 "Path": "/",
                 "Roles": [ {"Ref": "RoleJenkins"} ]
-            }
-        },
-        "BucketCredentials": {
-            "Type" : "AWS::S3::Bucket",
-            "Properties" : {
-                "BucketName" : "io.errorlab.credentials.docker"
             }
         },
         "BlockStorage": {
@@ -230,6 +254,19 @@
                 "VolumeType" : "gp2"
             }
         },
+        "RecordSet": {
+            "Type" : "AWS::Route53::RecordSet",
+            "Properties" : {
+                "HostedZoneName" : {"Fn::Join": ["", [{"Ref": "Domain"}, "."]]},
+                "Comment" : "Zone apex alias to target jenkins.",
+                "Name" : {"Fn::Join": ["", ["jenkins.", {"Ref": "Domain"}, "."]]},
+                "Type" : "A",
+                "AliasTarget": {
+                    "HostedZoneId" : { "Fn::GetAtt" : ["ELB", "CanonicalHostedZoneNameID"] },
+                    "DNSName" : { "Fn::GetAtt" : ["ELB", "CanonicalHostedZoneName"] }
+                }
+            }
+        },
         "LaunchConfiguration": {
             "Type" : "AWS::AutoScaling::LaunchConfiguration",
             "Properties" : {
@@ -237,18 +274,42 @@
                 "IamInstanceProfile" : {"Fn::GetAtt" : ["InstanceProfileJenkins", "Arn"] },
                 "ImageId" : "ami-257d5552",
                 "InstanceType" : {"Ref": "InstanceType"},
-                "KeyName" : "aws-eb",
+                "KeyName" : {"Ref": "KeyPair"},
                 "SecurityGroups" : [ {"Ref": "SecurityGroupHTTPExternal"}, {"Ref": "SecurityGroupSSH"} ],
                 "SpotPrice" : {"Ref": "Price"},
                 "UserData" : { "Fn::Base64" : {"Fn::Join": ["", [
                     "#!/bin/sh\n",
+                    "set -x\n",
+                    "exec > /var/log/user-data.log\n",
+                    "exec 2>&1\n",
                     "apt-get update\n",
                     "apt-get upgrade -y\n",
                     "apt-get install -y git\n",
                     "cd /tmp\n",
                     "git clone https://github.com/kiddouk/jenkins-docker\n",
-                    "sh jenkins-docker/init-jenkins.sh ", {"Ref": "AWS::Region"}, " ", {"Ref": "BlockStorage"}, " ", {"Ref": "BucketCredentials"}, "\n"
+                    "sh jenkins-docker/init-jenkins.sh ", {"Ref": "AWS::Region"}, " ", {"Ref": "BlockStorage"}, " ", {"Ref": "BucketDockerConfiguration"}, "\n"
                 ]]}}
+            }
+        },
+        "AutoScalingGroup": {
+            "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "Properties" : {
+                "AvailabilityZones" : [ { "Fn::Select": ["0", { "Fn::GetAZs" : {"Ref": "AWS::Region" }}]}],
+                "LaunchConfigurationName" : { "Ref" : "LaunchConfiguration" },
+                "HealthCheckGracePeriod": "240",
+                "MinSize" : "0",
+                "Cooldown": "120",
+                "MaxSize" : "1",
+                "DesiredCapacity": "1",
+                "LoadBalancerNames" : [ { "Ref" : "ELB" } ],
+                "VPCZoneIdentifier": [ {"Ref": "SubnetPublic1a"}],
+                "Tags": [
+                    {
+                        "PropagateAtLaunch": true,
+                        "Value": "Name",
+                        "Key": "Jenkins"
+                    }
+                ]
             }
         }
     }
