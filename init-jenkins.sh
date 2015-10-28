@@ -6,12 +6,13 @@ AWS_REGION=$1
 BLOCK_STORAGE_ID=$2
 BUCKET=$3
 
-apt-get install python-setuptools
+
+apt-get install -y docker.io curl python-setuptools 
 easy_install pip
 pip install awscli
+pip install requests
 aws configure set region $AWS_REGION
 aws configure set output json
-apt-get install docker.io
 apt-get install curl
 instance_id=`curl http://169.254.169.254/latest/meta-data/instance-id`
 aws ec2 attach-volume --volume-id $BLOCK_STORAGE_ID --instance-id $instance_id --device /dev/xvdh
