@@ -109,7 +109,7 @@
                     "UnhealthyThreshold" : "3"
                 },
                 "Listeners" : [{
-                    "InstancePort" : "8080",
+                    "InstancePort" : "80",
                     "InstanceProtocol" : "HTTP",
                     "LoadBalancerPort" : "80",
                     "Protocol" : "HTTP"
@@ -184,18 +184,25 @@
                 }
             }
         },
-        "ManagedPolicyUpdateJenkinsELB": {
+        "ManagedPolicyUpdateJenkinsASG": {
             "Type": "AWS::IAM::ManagedPolicy",
             "Properties": {
                 "Description" : "Allow to modify the AutoScaling group",
                 "PolicyDocument" :
                 {
                     "Version":"2012-10-17", 
-                    "Statement" : [{
-                        "Effect" : "Allow",           
-                        "Action" : "elasticloadbalancing:ModifyLoadBalancerAttributes",
-                        "Resource" : {"Fn::Join": ["", ["arn:aws:elasticloadbalancing:", {"Ref": "AWS::Region"}, ":*", ":loadbalancer/", {"Ref": "ELB"}]]}
-                    }]
+                    "Statement" : [
+                        {
+                            "Effect" : "Allow",           
+                            "Action" : "autoscaling:Describe*",
+                            "Resource" : "*"
+                        },
+                        {
+                            "Effect" : "Allow",           
+                            "Action" : "autoscaling:SetDesiredCapacity",
+                            "Resource" : "*"
+                        }
+                    ]
                 }
             }
         },
@@ -231,7 +238,7 @@
                         "Action": [ "sts:AssumeRole" ]
                     }]
                 },
-                "ManagedPolicyArns": [ {"Ref": "ManagedPolicyUpdateJenkinsELB"},
+                "ManagedPolicyArns": [ {"Ref": "ManagedPolicyUpdateJenkinsASG"},
                                        {"Ref": "ManagedPolicyAttachJenkinsVolume"},
                                        {"Ref": "ManagedPolicyAccessBucket"}
                                      ]
@@ -285,7 +292,6 @@
                     "apt-get update\n",
                     "apt-get upgrade -y\n",
                     "apt-get install -y git\n",
-                    "cd /tmp\n",
                     "git clone https://github.com/kiddouk/jenkins-docker\n",
                     "sh jenkins-docker/init-jenkins.sh ", {"Ref": "AWS::Region"}, " ", {"Ref": "BlockStorage"}, " ", {"Ref": "BucketDockerConfiguration"}, "\n"
                 ]]}}
