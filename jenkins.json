@@ -179,7 +179,7 @@
                     "Statement" : [{
                         "Effect" : "Allow",           
                         "Action" : ["s3:GetObject", "s3:GetObjectVersion"],
-                        "Resource" : {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "BucketDockerConfiguration"}, "/hub.dockercfg"]]}
+                        "Resource" : {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "BucketDockerConfiguration"}, "/config.json"]]}
                     }]
                 }
             }
