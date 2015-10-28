@@ -27,7 +27,7 @@ for job in jobs:
 
 # No need to shutdown if we have no task, we may need some setup first
 if len(jobs) == 0:
-   shutdown = false
+   shutdown = False
 
    
 if shutdown:
@@ -37,6 +37,3 @@ if shutdown:
    as_group.set_capacity(0)
    print "Shutdown due to lack of activity"
    sys.exit(1)
-else:
-   sys.exit(0)
-   
