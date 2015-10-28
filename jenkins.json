@@ -292,6 +292,7 @@
                     "apt-get update\n",
                     "apt-get upgrade -y\n",
                     "apt-get install -y git\n",
+                    "cd /root\n",
                     "git clone https://github.com/kiddouk/jenkins-docker\n",
                     "sh jenkins-docker/init-jenkins.sh ", {"Ref": "AWS::Region"}, " ", {"Ref": "BlockStorage"}, " ", {"Ref": "BucketDockerConfiguration"}, "\n"
                 ]]}}
