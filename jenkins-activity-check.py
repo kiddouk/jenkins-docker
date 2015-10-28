@@ -2,14 +2,14 @@
 
 import sys
 import requests
-import boto
+import boto.ec2.autoscale
 from datetime import datetime
 
 MAX_INACTIVE_PERIOD = 2
 
 # Now get the last time a task ran and check if that happened more that 2 hours ago.
 req = requests.get("http://localhost/api/json?tree=jobs[lastBuild[timestamp]]")
-if req.status != 200:
+if req.status_code != 200:
    print "Cannot check jenkins, retrying in a few minutes"
 
 shutdown = True
@@ -27,10 +27,9 @@ if shutdown:
    req = requests.get("http://169.254.169.254/latest/meta-data/services/domain")
    region = req.text()
    # All we need to do is to launch a scaling down activity
-   as_conn = boto.ec2.autoscale.AutoScaleConnection(region=region)
+   as_conn = boto.ec2.autoscale.connect_to_region(region)
    as_group = as_conn.get_all_groups(names=[autoscaling_group_name])
    as_group.set_capacity(0)
-   as_group.update()   
    print "Shutdown due to lack of activity"
    sys.exit(1)
 else:
