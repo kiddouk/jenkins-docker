@@ -6,7 +6,6 @@ import boto.ec2.autoscale
 from datetime import datetime
 
 REGION=sys.argv[1]
-ASG=sys.argv[2]
 
 MAX_INACTIVE_PERIOD = 2
 
@@ -29,11 +28,11 @@ for job in jobs:
 if len(jobs) == 0:
    shutdown = False
 
-   
 if shutdown:
    # All we need to do is to launch a scaling down activity
    as_conn = boto.ec2.autoscale.connect_to_region(REGION)
-   as_group = as_conn.get_all_groups(names=[ASG])[0]
+   as_groups = as_conn.get_all_groups()
+   as_group = filter(lambda x: x.startswith("jenkins"), as_groups)[0]
    as_group.set_capacity(0)
    print "Shutdown due to lack of activity"
    sys.exit(1)
