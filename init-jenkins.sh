@@ -27,7 +27,7 @@ if [ $? -eq 1 ]; then
 fi
 mount /dev/xvdh /mnt/jenkins_data
 mkdir .docker
-echo "* * * * */15 /root/jenkins-docker/jenkins-activity-check.py $AWS_REGION" > /etc/cron.d/jenkins-activity-check
+echo "* * * * */15 root /root/jenkins-docker/jenkins-activity-check.py $AWS_REGION" > /etc/cron.d/jenkins-activity-check
 aws s3 cp s3://$BUCKET/config.json .docker/config.json
 docker pull kiddouk/jenkins:latest
 docker run -d -p 80:8080 -v /mnt/jenkins_data:/var/jenkins_home kiddouk/jenkins
