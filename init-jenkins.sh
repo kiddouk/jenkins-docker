@@ -13,6 +13,7 @@ apt-get install -y docker-engine curl python-setuptools
 easy_install pip
 pip install awscli
 pip install requests
+pip install boto
 aws configure set region $AWS_REGION
 aws configure set output json
 apt-get install curl
