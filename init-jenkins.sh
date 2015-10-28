@@ -23,6 +23,6 @@ if [ $? -eq 1 ]; then
     mkfs -t ext4 /dev/xvdh
 fi
 mount /dev/xvdh /mnt/jenkins_data
-aws s3 cp s3://$BUCKET/hub.dockerconfig .dockerconfig
+aws s3 cp s3://$BUCKET/hub.dockercfg ~/.dockercfg
 docker pull kiddouk/jenkins
 docker run -d -p 80:8080 -v /mnt/jenkins_data:/var/jenkins_home kiddouk/jenkins
